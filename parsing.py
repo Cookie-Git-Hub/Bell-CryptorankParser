@@ -1,82 +1,61 @@
 import requests
 from bs4 import BeautifulSoup
 
+project_name = "N/A" #v
+project_date = "N/A" #v
+funding_amount = "N/A" #v
+funding_round = "N/A" #v
+project_twitter_rating = "N/A" #v
+category = "N/A" #v
+project_total_investments = "N/A" #v
+twitter_link = "N/A" #v
 
-def output_console(project_name, project_link, project_date, funding_amount, funding_round, project_text_content, project_twitter_rating, category, project_total_investments, project_name_investor, project_tier, project_type, project_stage, project_twitter, count):
-    print("Название проекта:", project_name)
-    print("Ссылка проекта:", project_link)
-    print("Дата:", project_date)
-    print("Сумма финансирования:", funding_amount)
-    print("Тип финансирования:", funding_round)
-    print("Название фонда:", project_text_content)
-    print("Оценка Twitter:", project_twitter_rating)
-    print("Категория проекта", category)
-    print("Всего инвестиций:", project_total_investments)
-    print("Название инвестора", project_name_investor)
-    print("Уровень проекта:", project_tier)
-    print("Тип проекта", project_type)
-    print("Стадия проекта", project_stage)
-    print("Twitter", project_twitter)
-    print("Count", count)
+
+
+def output_console(project_name, project_date, funding_amount, funding_round, project_twitter_rating, category, investors_list, project_total_investments, twitter_link):
+    print("**Название проекта:**", project_name)
+    print("**Дата:**", project_date)
+    print("**Сумма финансирования:**", funding_amount)
+    print("**Тип финансирования:**", funding_round)
+    print("**Оценка Twitter:**", project_twitter_rating)
+    print("**Категория проекта:**", category)
+
+    print("**Всего инвестиций проекта:**", project_total_investments)
+    print("**Twitter:**", twitter_link)
+
+    print("**Инвестора:**")
+    for investor in investors_list:
+        print(investor)
+        
     print("------------------------------------")
 
 
-def additional_information(project_link, project_name):
-    url1 = f"https://cryptorank.io{project_link}"
-    response1 = requests.get(url1)
 
-    if response1.status_code == 200:
-        soup = BeautifulSoup(response1.content, "html.parser")
+def parsing_investors(project_name):
+    name = project_name.lower().replace(".", "-").replace(" ", "-")
+    
+    url = f"https://api.cryptorank.io/v0/coins/{name}/investors-list?limit=10&skip=0"
+    response = requests.get(url)
+    
+    if response.status_code == 200:
+        data = response.json()  
+        investors = data['investors']
         
-        total_investments = soup.find_all("p", class_="sc-50f3633f-0 fZqlZL")
-        t_inv = total_investments[1]
-        if t_inv:
-            investments = t_inv.text
-
-        for cell in soup.find_all("tr", class_="sc-7ff8d1ea-0 kuuWTw init-scroll"):
-
-        
-            name = cell.find("p", class_="sc-c79f6d7-0 hMPVxR").get_text(strip=True)
-            tier = cell.find("p", class_="sc-c79f6d7-0 dmCzJN").get_text(strip=True)
-            type = cell.find("p", class_="sc-c79f6d7-0 bCesSr").get_text(strip=True)
-            stage = cell.find("p", class_="sc-c79f6d7-0 fBhYIE").get_text(strip=True)
-
-            url2 = f"https://cryptorank.io/price/{project_name.lower()}"
-            response2 = requests.get(url2)
-
-            if response2.status_code == 200:
-                a = BeautifulSoup(response2.content, "html.parser")
-
-                twitter = a.find("div", class_="sc-be4b7d84-0 dtQbLH").get_text(strip=True)
-
-            else:
-                print("Ошибка при получении данных в additional_information url2. Код статуса:", response2.status_code)
-                return None
-                
-            
-            print("Название инвестора", name)
-            print("Уровень проекта:", tier)
-            print("Тип проекта", type)
-            print("Стадия проекта", stage)
-            print("Twitter", twitter)
-
-            return {
-                'project_total_investments': investments, 
-                'project_name_investor': name, 
-                'project_tier': tier, 
-                'project_type': type, 
-                'project_stage': stage, 
-                'project_twitter': twitter
-            }
-        
-
+        investors_list = []
+        for investor in investors:
+            name = investor["name"]
+            tier = investor['tier']
+            category = investor['category']
+            stage = investor['stage']
+            investors_list.append(f"Инвестор: {name}, Стадия: {tier}, Категория: {category}, Stage: {stage}")
+    
+        return investors_list
+             
     else:
-        print("Ошибка при получении данных в additional_information url1. Код статуса:", response1.status_code)
-        return None
+        print(f"Failed to parse data. Status code: {response.status_code}")
+    
 
 
-
-saved_data = []
 
 url = "https://cryptorank.io/funding-rounds"
 response = requests.get(url)
@@ -87,6 +66,7 @@ if response.status_code == 200:
     count = 0
 
     for cell in soup.find_all("tr", class_="sc-7ff8d1ea-0 kuuWTw init-scroll"):
+
         count = count + 1
 
         project_name = cell.find("span", class_="sc-ce25b3f-0 iTMjXc").get_text(strip=True)
@@ -94,40 +74,45 @@ if response.status_code == 200:
         project_date = cell.find("td", class_="sc-c79f6d7-0 jehnNa sc-688d708a-0 gWxWSW").get_text(strip=True)
         funding_amount = cell.find("td", class_="sc-c79f6d7-0 ftkmA-D sc-ebc32dcf-0 ja-DHql").get_text(strip=True)
         funding_round = cell.find("td", class_="sc-c79f6d7-0 jehnNa").get_text(strip=True)
-        fund_name = cell.find("span", class_="sc-a3b70ab2-3 liNnOB")
-        if fund_name:
-            project_text_content = fund_name.text
         twitter_rating = cell.find("span", class_="sc-50f3633f-0 iXtZYt")
         if twitter_rating:
             project_twitter_rating = twitter_rating.text
         category = cell.find("p", class_="sc-50f3633f-0 crWDxH").get_text(strip=True)
 
-        add = additional_information(project_link, project_name)
+        
+        investors_list = parsing_investors(project_name)  
+            
+         
+        url = f"https://cryptorank.io{project_link}"
+        response = requests.get(url)
 
-        project_total_investments = ""
-        project_name_investor = ""
-        project_tier = ""
-        project_type = ""
-        project_stage = ""
-        project_twitter = ""
-
-        if add is not None:
-            project_total_investments = add.get('project_total_investments')
-            project_name_investor = add.get('project_name_investor')
-            project_tier = add.get('project_tier')
-            project_type = add.get('project_type')
-            project_stage = add.get('project_stage')
-            project_twitter = add.get('project_twitter')
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.content, "html.parser")
+            total_investments = soup.find_all("p", class_="sc-50f3633f-0 fZqlZL")[1].get_text(strip=True)
+            
+            
         else:
-            print("Ошибка")
+            print(f"Failed to parse data investments. Status code: {response.status_code}")
 
-        output_console(project_name, project_link, project_date, funding_amount, funding_round, project_text_content, project_twitter_rating, category, project_total_investments, project_name_investor, project_tier, project_type, project_stage, project_twitter, count)
 
-        if count == 3:
+        twitter_url = url.replace("ico", "price")
+        response = requests.get(twitter_url)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.content, "html.parser")
+            twitter_link = soup.find_all("a", class_="sc-f910907-0 gBOfYu")[1]["href"]
+            
+        else:
+            print(f"Failed to parse data twitter. Status code: {response.status_code}")
+            
+
+        output_console(project_name, project_date, funding_amount, funding_round, project_twitter_rating, category, investors_list, total_investments, twitter_link)
+
+        if count == 2: 
             break
 else:
-    print("Ошибка при получении данных. Код статуса:", response.status_code)
+    print(f"Failed to parse data. Status code: {response.status_code}")
+    
+    
+    
+    
 
-
-# def array_compare(arr):
-#     for i
