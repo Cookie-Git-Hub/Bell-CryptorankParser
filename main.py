@@ -1,25 +1,42 @@
 import discord
+import asyncio
 import os
+from discord.ext import commands
 from dotenv import load_dotenv
-#from parsing import 
+from parsing import parsing
 
 load_dotenv()
+
+stop_flag = False
 
 intents = discord.Intents.default()
 intents.message_content = True
 
-client = discord.Client(intents=intents)
+bot = commands.Bot(command_prefix='$', intents=intents)
 
-@client.event
+@bot.event
 async def on_ready():
-    print(f'We have logged in as {client.user}')
+    print(f'We have logged in as {bot.user}')
 
-@client.event
+@bot.command()
+async def start(ctx):
+    await ctx.send("I'm starting!")
+    print("I'm starting!")
+    while not stop_flag:
+        result = parsing()
+        print(result)
+        await ctx.send(result)
+        await asyncio.sleep(30)
+
+@bot.event
 async def on_message(message):
-    if message.author == client.user:
+    if message.author == bot.user:
         return
 
-    if message.content.startswith('$hello'):
-        await message.channel.send('Hello!')
+    if message.content.startswith('$status'):
+        await message.channel.send("I'm good!")
 
-client.run(os.getenv('TOKEN'))
+    await bot.process_commands(message)
+
+
+bot.run(os.getenv('TOKEN'))
