@@ -23,9 +23,16 @@ async def start(ctx):
     await ctx.send("I'm starting!")
     global stop_flag
     while not stop_flag:
-        result = parsing()
-        if result:
-            await ctx.send(result)
+        msg1, msg2, msg3 = parsing()
+        if msg3:
+            await ctx.send(msg1)
+            await ctx.send(msg2)
+            await ctx.send(msg3)
+        elif msg2:
+            await ctx.send(msg1)
+            await ctx.send(msg2)
+        elif msg1:
+            await ctx.send(msg1)
         await asyncio.sleep(300)
 
 @bot.command()
@@ -39,7 +46,7 @@ async def on_message(message):
     if message.author == bot.user:
         return
 
-    if message.content.startswith('$status'):
+    if message.content.startswith('!status'):
         await message.channel.send("I'm good!")
 
     await bot.process_commands(message)

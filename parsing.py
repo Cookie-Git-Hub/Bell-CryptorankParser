@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 main_list = []
 
 def parsing(): 
-    amount_project = 2
+    amount_project = 10
     count = 0
 
 
@@ -22,16 +22,14 @@ def parsing():
     
 
 
-
-
     def output_console(result_list):
-
-        project_arguments_count = 0
-        output_result = ""
-        
-        for count in range(amount_project):
-
-            project_arguments_count = project_arguments_count + 1
+        output_result_1 = ""
+        output_result_2 = ""
+        output_result_3 = ""
+        project_count = 0
+        amount_count = len(result_list)
+        for count in range(amount_count):
+            project_count += 1
 
             project_name = result_list[count][0]
             project_date = result_list[count][1]
@@ -47,15 +45,16 @@ def parsing():
             result = ""
             for investor in investors_list:
                 result += str(investor) + "; "
-              
-            output_result += f"**Название проекта:** {project_name}\n**Дата:** {project_date}\n**Сумма финансирования:** {funding_amount}\n**Тип финансирования:** {funding_round}\n**Оценка Twitter:** {project_twitter_rating}\n**Категория проекта:** {category}\n**Всего инвестиций проекта:** {total_investments}\n**Twitter:** {twitter_link} \n**Ссылка проекта:** {project_link}\n**Инвестора:**\n{result}\n\n"
-
-        return output_result
             
             
-
-
-
+            if project_count < 4:
+                output_result_1 += f"**Название проекта:** {project_name}\n**Дата:** {project_date}\n**Сумма финансирования:** {funding_amount}\n**Тип финансирования:** {funding_round}\n**Оценка Twitter:** {project_twitter_rating}\n**Категория проекта:** {category}\n**Всего инвестиций проекта:** {total_investments}\n**Twitter:** {twitter_link} \n**Ссылка проекта:** {project_link}\n**Инвестора:**\n{result}\n\n"
+            elif project_count >= 4 and project_count <=6:
+                output_result_2 += f"**Название проекта:** {project_name}\n**Дата:** {project_date}\n**Сумма финансирования:** {funding_amount}\n**Тип финансирования:** {funding_round}\n**Оценка Twitter:** {project_twitter_rating}\n**Категория проекта:** {category}\n**Всего инвестиций проекта:** {total_investments}\n**Twitter:** {twitter_link} \n**Ссылка проекта:** {project_link}\n**Инвестора:**\n{result}\n\n"
+            elif project_count >= 7:
+                output_result_3 += f"**Название проекта:** {project_name}\n**Дата:** {project_date}\n**Сумма финансирования:** {funding_amount}\n**Тип финансирования:** {funding_round}\n**Оценка Twitter:** {project_twitter_rating}\n**Категория проекта:** {category}\n**Всего инвестиций проекта:** {total_investments}\n**Twitter:** {twitter_link} \n**Ссылка проекта:** {project_link}\n**Инвестора:**\n{result}\n\n"
+            
+        return output_result_1, output_result_2, output_result_3
 
 
     def parsing_investors(project_name):
@@ -138,7 +137,10 @@ def parsing():
             response = requests.get(twitter_url)
             if response.status_code == 200:
                 soup = BeautifulSoup(response.content, "html.parser")
-                twitter_link = soup.find_all("a", class_="sc-f910907-0 gBOfYu")[1]["href"]
+                try:
+                    twitter_link = soup.find_all("a", class_="sc-f910907-0 gBOfYu")[1]["href"]
+                except:
+                    print("No twitter link")
                 
             else:
                 print(f"Failed to parse data twitter. Status code: {response.status_code}")
@@ -151,8 +153,9 @@ def parsing():
             if count == amount_project: 
                 break
         
-        result = func(result_list, main_list)
-        return result
+        message1, message2, message3 = func(result_list, main_list)
+        return message1, message2, message3
+
     else:
         print(f"Failed to parse data. Status code: {response.status_code}")
         
