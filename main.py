@@ -21,12 +21,18 @@ async def on_ready():
 @bot.command()
 async def start(ctx):
     await ctx.send("I'm starting!")
-    print("I'm starting!")
+    global stop_flag
     while not stop_flag:
         result = parsing()
-        print(result)
-        await ctx.send(result)
-        await asyncio.sleep(30)
+        if result:
+            await ctx.send(result)
+        await asyncio.sleep(300)
+
+@bot.command()
+async def stop(ctx):    
+    global stop_flag
+    stop_flag = True
+    await ctx.send("Work stoped!")
 
 @bot.event
 async def on_message(message):

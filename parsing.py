@@ -2,6 +2,8 @@ import requests
 from bs4 import BeautifulSoup
 
 
+main_list = []
+
 def parsing(): 
     amount_project = 2
     count = 0
@@ -25,7 +27,8 @@ def parsing():
     def output_console(result_list):
 
         project_arguments_count = 0
-
+        output_result = ""
+        
         for count in range(amount_project):
 
             project_arguments_count = project_arguments_count + 1
@@ -43,9 +46,11 @@ def parsing():
 
             result = ""
             for investor in investors_list:
-                result += str(investor) + "\n"
+                result += str(investor) + "; "
+              
+            output_result += f"**Название проекта:** {project_name}\n**Дата:** {project_date}\n**Сумма финансирования:** {funding_amount}\n**Тип финансирования:** {funding_round}\n**Оценка Twitter:** {project_twitter_rating}\n**Категория проекта:** {category}\n**Всего инвестиций проекта:** {total_investments}\n**Twitter:** {twitter_link} \n**Ссылка проекта:** {project_link}\n**Инвестора:**\n{result}\n\n"
 
-            return(f"**Название проекта:** {project_name}\n**Дата:** {project_date}\n**Сумма финансирования:** {funding_amount}\n**Тип финансирования:** {funding_round}\n**Оценка Twitter:** {project_twitter_rating}\n**Категория проекта:** {category}\n**Всего инвестиций проекта:** {total_investments}\n**Twitter:** {twitter_link} \n**Ссылка проекта:** {project_link}\n**Инвестора:**\n{result}")
+        return output_result
             
             
 
@@ -66,13 +71,9 @@ def parsing():
             investors_list = []
             for investor in investors:
                 name = investor["name"]
-                tier = investor['tier']
-                category = investor['category']
-                stage = investor['stage']
-                stage_str = str(stage) 
-                stage_replace = stage_str.replace("'", "").replace("[", "").replace("]", "")
+                tier = investor["tier"]
 
-                investors_list.append(f"Инвестор: {name}, Стадия: {tier}, Категория: {category}, Stage: {stage_replace}")
+                investors_list.append(f"{name}, ({tier})")
         
             return investors_list
                 
@@ -80,7 +81,20 @@ def parsing():
             print(f"Failed to parse data. Status code: {response.status_code}")
         
 
-
+    
+    def func(new_list, old_list):
+        global main_list
+        new_projects = []
+        result = ""
+        for project in new_list:
+            if project not in old_list:
+                new_projects.append(project)
+        if new_projects:
+            main_list = new_list
+            result = output_console(new_projects)
+            return result
+        else:
+            print("No new projects")
 
     url = "https://cryptorank.io/funding-rounds"
     response = requests.get(url)
@@ -109,7 +123,11 @@ def parsing():
 
             if response.status_code == 200:
                 soup = BeautifulSoup(response.content, "html.parser")
-                total_investments = soup.find_all("p", class_="sc-50f3633f-0 fZqlZL")[1].get_text(strip=True)
+                try:
+                    total_investments = soup.find_all("p", class_="sc-50f3633f-0 fZqlZL")[1].get_text(strip=True)
+                except:
+                    total_investments = "N/A"
+
                 
                 
             else:
@@ -126,16 +144,15 @@ def parsing():
                 print(f"Failed to parse data twitter. Status code: {response.status_code}")
                 
 
-            output_result = [project_name, project_date, funding_amount, funding_round, project_twitter_rating, category, investors_list, total_investments, twitter_link, full_project_link]
-            result_list.append(output_result)
+            output_list = [project_name, project_date, funding_amount, funding_round, project_twitter_rating, category, investors_list, total_investments, twitter_link, full_project_link]
+            result_list.append(output_list)
 
             count = count + 1
             if count == amount_project: 
                 break
         
-        result = output_console(result_list)
+        result = func(result_list, main_list)
         return result
     else:
         print(f"Failed to parse data. Status code: {response.status_code}")
         
-            
