@@ -2,13 +2,12 @@ import discord
 import asyncio
 import os
 from discord.ext import commands
-from dotenv import load_dotenv
-from parsing import parsing
+from logic import control
 
-load_dotenv()
 
+token = os.environ["TOKEN"]
 stop_flag = False
-
+amount_project = 10
 intents = discord.Intents.default()
 intents.message_content = True
 
@@ -22,24 +21,24 @@ async def on_ready():
 async def start(ctx):
     await ctx.send("I'm starting!")
     global stop_flag
+    stop_flag = False
     while not stop_flag:
-        msg1, msg2, msg3 = parsing()
-        if msg3:
-            await ctx.send(msg1)
-            await ctx.send(msg2)
-            await ctx.send(msg3)
-        elif msg2:
-            await ctx.send(msg1)
-            await ctx.send(msg2)
-        elif msg1:
-            await ctx.send(msg1)
-        await asyncio.sleep(300)
+        try:
+            msg = await control(amount_project)
+            amount_pr = len(msg)
+            for count in range(amount_pr):
+                message = msg[count]
+                await ctx.send(message)
+        except Exception:
+            print(f"No new projects or error occurred while parsing: {Exception}")
+        await asyncio.sleep(120)
+
 
 @bot.command()
 async def stop(ctx):    
     global stop_flag
     stop_flag = True
-    await ctx.send("Work stoped!")
+    await ctx.send("Work stopped!")
 
 @bot.event
 async def on_message(message):
@@ -52,4 +51,5 @@ async def on_message(message):
     await bot.process_commands(message)
 
 
-bot.run(os.getenv('TOKEN'))
+bot.run(token)
+
